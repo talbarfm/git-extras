@@ -699,7 +699,7 @@ $ git reauthor --all --correct-email jack@perso.me --correct-name Jack --type co
 
 ## git alias
 
-Define, search and show aliases.
+Define, search, show, and remove aliases.
 
 Define a new alias:
 
@@ -723,6 +723,20 @@ amend = commit --amend
 rank = shortlog -sn --no-merges
 whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 whois = !sh -c 'git log -i -1 --pretty="format:%an <%ae>
+```
+
+Remove one alias by name (respects `--global` and `--local`; exits with an error if the alias does not exist):
+
+```bash
+$ git alias --remove last
+# or: git alias -r last
+```
+
+Remove all aliases in the current scope (iterates over existing aliases and unsets each; respects `--global` and `--local`):
+
+```bash
+$ git alias --remove-all
+# or: git alias --clear
 ```
 
 ## git ignore
