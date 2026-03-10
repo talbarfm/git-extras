@@ -7,16 +7,59 @@ cat <<HERE
 usage: git alias [options]                          # list all aliases
    or: git alias [options] <search-pattern>         # show aliases matching pattern
    or: git alias [options] <alias-name> <command>   # alias a command
+   or: git alias [options] --remove <alias-name>    # remove one alias
+   or: git alias [options] --remove-all             # remove all aliases in scope
 options:
 
-    --global  Show or create alias in the system config
-    --local   Show or create alias in the repository config
+    --global     Show or create alias in the system config
+    --local      Show or create alias in the repository config
+    --remove,-r  Remove one alias by name
+    --remove-all,--clear  Remove every alias in the current scope
 HERE
 }
 
 if [[ "$1" == "--local" || "$1" == "--global" ]]; then
     options=$1
     shift
+fi
+
+# Remove one alias: git alias [--global|--local] --remove <name>
+if [[ "$1" == "--remove" || "$1" == "-r" ]]; then
+    shift
+    [[ $# -lt 1 ]] && { >&2 echo "error: --remove requires an alias name."; usage; exit 1; }
+    alias_name="$1"
+    if [[ -z "$options" ]]; then
+        git config --get "alias.$alias_name" &>/dev/null || { >&2 echo "error: alias '$alias_name' does not exist."; exit 1; }
+    else
+        git config "$options" --get "alias.$alias_name" &>/dev/null || { >&2 echo "error: alias '$alias_name' does not exist."; exit 1; }
+    fi
+    if [[ -z "$options" ]]; then
+        git config --unset "alias.$alias_name"
+    else
+        git config "$options" --unset "alias.$alias_name"
+    fi
+    exit 0
+fi
+
+# Remove all aliases: git alias [--global|--local] --remove-all (or --clear)
+if [[ "$1" == "--remove-all" || "$1" == "--clear" ]]; then
+    if [[ -z "$options" ]]; then
+        alias_list=$(git config --get-regexp 'alias.*' 2>/dev/null | sed 's/^alias\.\([^ ]*\).*/\1/')
+    else
+        alias_list=$(git config "$options" --get-regexp 'alias.*' 2>/dev/null | sed 's/^alias\.\([^ ]*\).*/\1/')
+    fi
+    if [[ -z "$alias_list" ]]; then
+        exit 0
+    fi
+    while read -r a; do
+        [[ -z "$a" ]] && continue
+        if [[ -z "$options" ]]; then
+            git config --unset "alias.$a"
+        else
+            git config "$options" --unset "alias.$a"
+        fi
+    done <<< "$alias_list"
+    exit 0
 fi
 
 case $# in
