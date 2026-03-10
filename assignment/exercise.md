@@ -35,8 +35,8 @@ By completing this assignment you will have used:
 
 1. Clone this repository (or the one your instructor assigned).
 2. Make the commands available:
-   - Run the install process from your cloned repository (see [Installation.md](../Installation.md)).
-3. From the repo root, run at least three existing commands of you choosing in a real Git repo and note what they do, while writing their outputs to files names "<command-name>_output.txt and hand them in. 
+   - Run the install process from your cloned repository (see [Installation.md](../Installation.md)), or for development add the repo's `bin` to your PATH so you can run the commands from the clone (e.g. `PATH="$PATH:$(pwd)/bin"` or run `./bin/git-<command>`).
+3. From the repo root, run at least three existing commands of your choosing in a real Git repo and note what they do, while writing their outputs to files named "<command-name>_output.txt" (e.g. `git-summary_output.txt`) and hand them in. 
 
 
 
@@ -46,14 +46,14 @@ By completing this assignment you will have used:
 
 ## Step 2 — Analyze and debug four commands
 
-You will work with these four commands (scripts in `bin/`): **`git count`**, **`git summary`**, **`git authors`**, and **`git effort`**. They are **buggy** versions—each has **exactly one** intentional bug. Do the following instructions for **each** of the four scripts:- 
+You will work with these four commands (scripts in `bin/`): **`git count`**, **`git summary`**, **`git authors`**, and **`git effort`**. They are **buggy** versions—each has **exactly one** intentional bug. Do the following instructions for **each** of the four scripts: 
 
-| Command        | Script           |
-|----------------|------------------|
-| `git count`    | [bin/git-count](../bin/git-count) |
-| `git summary`  | [bin/git-summary](../bin/git-summary) |
-| `git authors`  | [bin/git-authors](../bin/git-authors) |
-| `git effort`   | [bin/git-effort](../bin/git-effort) |
+| Command        | Script           | Hint to reproduce |
+|----------------|------------------|-------------------|
+| `git count`    | [bin/git-count](../bin/git-count) | Run it in a new repository: make a commit, then run `git count`. Something weird happens with the total. |
+| `git summary`  | [bin/git-summary](../bin/git-summary) | Try a flag whose effect is easy to verify (e.g. one that clearly changes the output) and see if it takes effect. |
+| `git authors`  | [bin/git-authors](../bin/git-authors) | Run without `-l` (e.g. `git authors` or `git authors AUTHORS`) and look for exceptions or errors. |
+| `git effort`   | [bin/git-effort](../bin/git-effort) | Run the command (e.g. `git effort` or `git effort Makefile`) and see what happens. |
 
 1. List which **Git commands** or **Bash commands** the script runs, and document above each one what it does and what its flags mean.
 2. Run the script and observe any wrong output or failure.
@@ -102,15 +102,15 @@ Implement the following while handling edge cases:
    
 ---
 
-## Step 5 — Build, validate, document (Bonus 5 points)
+## Step 5 — Build and validate (Bonus 5 points)
 
-1. Build the man page for your command (see [man/Readme.md](../man/Readme.md)). From the repo root you can run `make docs` to build all man pages, or build only your command’s `.1` and `.html` as described in the man Readme.
+
+1. Build the man page for your command. Use the project's documentation to find out how.
 2. Run the integrity checker for your command:
    ```bash
    ./check_integrity.sh recent-committers
    ```
-   Fix any reported issues until it passes.
-3. Optionally: write a small script that removes only the **built** man pages for your command (e.g. `man/git-recent-committers.1` and `man/git-recent-committers.html`) without deleting the `.md` source. This illustrates artifact management.
+   Fix any reported issues until it passes. If the checker fails, use its output and the project's contributing and documentation files to figure out what is required.
 
 ---
 
@@ -120,4 +120,5 @@ Implement the following while handling edge cases:
 - [check_integrity.sh](../check_integrity.sh) — validation script
 - [.github/workflows/ci.yml](../.github/workflows/ci.yml) — CI workflow
 - [man/Readme.md](../man/Readme.md) — how to build man pages
+- [man/man-template.md](../man/man-template.md) — template for new command man pages
 - [Commands.md](../Commands.md) — list and short docs of all commands

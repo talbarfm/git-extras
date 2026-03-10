@@ -7,13 +7,13 @@ Use this document to set up the assignment, grade submissions, and check debuggi
 ## 1. Setup checklist (before giving to students)
 
 - [ ] **Assignment and AI rules:** Point students to [exercise.md](exercise.md). They must give [AI_RULES.md](AI_RULES.md) to their AI assistant **before** they start working so the AI follows the usage limits (no full solutions, no fixing buggy scripts for them, etc.).
-- [ ] **Buggy scripts:** The four commands `bin/git-count`, `bin/git-authors`, `bin/git-summary`, and `bin/git-effort` are the buggy versions; students fix them in place. `bin/git-bulk` has no intentional bug (analyze only). Run instructions are in [exercise.md](exercise.md) Step 2b.
+- [ ] **Buggy scripts:** The four commands `bin/git-count`, `bin/git-authors`, `bin/git-summary`, and `bin/git-effort` are the buggy versions; students fix them in place. Run instructions are in [exercise.md](exercise.md) 
 
 ---
 
-## 2. Five commands for analysis
+## 2. Commands for analysis (Step 2)
 
-These are the five commands students must analyze in Step 2. Each covers at least one of: orchestration, file iteration, env vars, error handling, build/CI.
+The exercise asks students to analyze and debug **four** commands (see [exercise.md](exercise.md) Step 2). The table below lists those four plus **git bulk** as an optional fifth for instructor reference (git-bulk has no intentional bug). Each covers at least one of: orchestration, file iteration, env vars, error handling.
 
 | Command       | Script          | Topics covered |
 |---------------|-----------------|----------------|
@@ -21,15 +21,14 @@ These are the five commands students must analyze in Step 2. Each covers at leas
 | **git summary** | `bin/git-summary` | Orchestration + **file iteration**: `git log`, `git shortlog`, `git ls-files`, `git blame`; functions like `single_file` / `lines` loop over files. |
 | **git authors** | `bin/git-authors` | Orchestration: `git shortlog -sne`; option parsing; writing output to a file. |
 | **git effort** | `bin/git-effort` | **Error handling**: `usage()`, validation of `--above`, exit codes; **iteration** over paths (`git ls-files` or arguments). |
-| **git bulk** | `bin/git-bulk` | **Iteration** over workspaces and repos; **error handling**: `usage`, `cdfail`, `checkWSName`; **env/config**: `bulkworkspaces` and variable dereference in `parseWsName`. |
 
 Build/CI is covered in the assignment flow (Step 1: read `.github/workflows/ci.yml`; Step 4: run `make` and `check_integrity.sh`), not as a sixth command.
 
-For Step 2b, the first four scripts above are the buggy versions; `bin/git-bulk` has no bug. Bug locations and correct fixes are in section 3 below.
+The **first four** scripts in the table are the buggy versions students fix in Step 2; . Bug locations and correct fixes are in section 3 below.
 
 ---
 
-## 3. Bug locations and correct fixes (Step 2b — do not share with students)
+## 3. Bug locations and correct fixes (Step 2 — do not share with students)
 
 The four scripts **`bin/git-count`**, **`bin/git-authors`**, **`bin/git-summary`**, and **`bin/git-effort`** are the buggy versions; each has exactly one bug. **`bin/git-bulk`** has no intentional bug. Use the details below to verify student fixes and grade their explanations.
 
@@ -62,13 +61,13 @@ The four scripts **`bin/git-count`**, **`bin/git-authors`**, **`bin/git-summary`
 
 ### 3.3 git-summary
 
-- **Bug location:** Two places. (1) Line 13: the case matches `"x$arg"` instead of `"$arg"` — i.e. `case "x$arg" in`. So the value being matched is literally `x--line`, `x--dedup-by-email`, etc., and no pattern (`--line`, `--full-path`, `-*`, etc.) ever matches; every argument falls through to the default branch. (2) In the `*)` branch (lines 33–36), the line `set -- "$@" "$arg"` is commented out, so positional arguments (refs, paths) are never added back to the list and are lost after the loop.
-- **Why it’s wrong:** All command-line arguments are ignored. No option (e.g. `--line`, `--dedup-by-email`, `--no-merges`, `--output-style`, `--full-path`) is ever recognized because the case value is never equal to the patterns. Ref and path arguments are also ignored because they are not added back to the positional parameters, so `commit` stays `HEAD` and `paths` stays empty.
-- **How to see the bug:** Run `git summary --line` — it behaves as plain `git summary` (no line summary). Run `git summary main` — the ref is ignored and output is for HEAD. Run `git summary --dedup-by-email` — dedup is not applied. Any combination of options and refs/paths is ignored.
-- **Correct fix:** (1) Change line 13 from `case "x$arg" in` to `case "$arg" in`. (2) In the `*)` branch, uncomment `set -- "$@" "$arg"` so that non-option arguments are added back. Both changes are required.
+- **Bug location:** Line 13. The case matches `"x$arg"` instead of `"$arg"` — i.e. `case "x$arg" in`. So the value being matched is literally `x--line`, `x--dedup-by-email`, etc., and no pattern (`--line`, `--full-path`, `-*`, etc.) ever matches; every argument falls through to the default branch.
+- **Why it’s wrong:** All command-line options are ignored. No option (e.g. `--line`, `--dedup-by-email`, `--no-merges`, `--output-style`, `--full-path`) is ever recognized because the case value is never equal to the patterns. Non-option arguments (refs, paths) still get added back via `set -- "$@" "$arg"` in the default branch, so ref and path handling works; only option parsing is broken.
+- **How to see the bug:** Run `git summary --line` — it behaves as plain `git summary` (no line summary). Run `git summary --dedup-by-email` — dedup is not applied. Any option is ignored.
+- **Correct fix:** Change line 13 from `case "x$arg" in` to `case "$arg" in`.
 - **How to verify:** Run with options (e.g. `./bin/git-summary --line`, `./bin/git-summary --dedup-by-email`) and with a ref (e.g. `./bin/git-summary main`). Output must reflect the options and the ref.
-- **Wrong fixes to reject:** Fixing only one of the two issues (e.g. only restoring `case "$arg" in` but leaving `set --` commented out, or only uncommenting `set --` but leaving `case "x$arg" in`).
-- **What a good explanation mentions:** That the case was matching the wrong value (e.g. `"x$arg"` instead of `"$arg"`), so no option pattern matched and all arguments fell through to the default; and that positional arguments must be added back in the default branch so that refs and paths are preserved.
+- **Wrong fixes to reject:** Changing anything other than the case line (e.g. only touching the `*)` branch or other parts of the script).
+- **What a good explanation mentions:** That the case was matching the wrong value (e.g. `"x$arg"` instead of `"$arg"`), so no option pattern matched and all arguments fell through to the default.
 
 ---
 
@@ -106,7 +105,7 @@ All students implement **`git recent-committers`** with the same requirements (f
 | **Integration** | Man page present and built; Commands.md updated; completion updated; `./check_integrity.sh recent-committers` passes. |
 | **Documentation** | Usage and examples clear; explanation (what it does, how to run, changes, orchestration, env var, errors, iteration) complete. |
 | **Step 2 (analysis)** | All four commands analyzed; at least one iteration example identified and explained. |
-| **Step 2b (debugging)** | All four buggy scripts (git-count, git-authors, git-summary, git-effort) fixed correctly; each fix explained in 2–3 sentences. |
+| **Step 2 (debugging)** | All four buggy scripts (git-count, git-authors, git-summary, git-effort) fixed correctly; each fix explained in 2–3 sentences. |
 | **Reflection (optional)** | If provided, one example per learning goal used. |
 
 ---
