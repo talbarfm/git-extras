@@ -98,8 +98,6 @@ effort() {
     color='90'
 
     # ignore <= --above
-    # Bug fix: comment says "ignore paths with commits <= above", so we must skip when commits <= above.
-    # Using -lt skipped only when commits < above; paths with exactly 'above' commits were incorrectly shown. Use -le.
     test "$commits" -le "$above" && exit 0
 
     # commits

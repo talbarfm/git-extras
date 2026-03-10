@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 NO_EMAIL=false
-LIST=false
 FILE=""
 
 while [[ $# -gt 0 ]]; do
@@ -19,9 +18,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Bug fix: LIST is only set to true when -l/--list is used; otherwise it was unset. Unquoted $LIST
-# in [ ] became [ != true ] (syntax error). Fix: initialize LIST=false and quote "$LIST" in the test.
-if [ "$LIST" != true ]; then
+if [ $LIST != true ]; then
   FILE=$1
   if [ -z "$FILE" ]; then
     FILE=$(find . -mindepth 1 -maxdepth 1 \( -iname '*authors*' -o -iname '*contributors*' \) | head -n1)
