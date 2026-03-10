@@ -1,4 +1,4 @@
-# Bash Orchestration Assignment
+# Bash Scripting with git-extras
 
 ## Overview
 

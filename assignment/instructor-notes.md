@@ -1,4 +1,4 @@
-# Instructor Notes — Bash Orchestration Assignment
+# Instructor Notes — Bash Scripting with git-extras
 
 Use this document to set up the assignment, grade submissions, and check debugging answers. Keep this file separate from the student-facing [exercise.md](exercise.md).
 

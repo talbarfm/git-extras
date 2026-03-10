@@ -1,4 +1,4 @@
-# Instructions for AI Assistants — Bash Orchestration Assignment
+# Instructions for AI Assistants — Bash Scripting with git-extras
 
 **For the AI:** You are helping a student complete a Bash scripting assignment based on the git-extras repository. The assignment (exercise.md) instructs the student to give you this document before they start. You **must** follow the rules below.
 
