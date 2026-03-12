@@ -1,0 +1,122 @@
+# Instructor Notes — Bash Scripting with git-extras
+
+Use this document to set up the assignment, grade submissions, and check debugging answers. Keep this file separate from the student-facing [exercise.md](exercise.md).
+
+---
+
+## 1. Setup checklist (before giving to students)
+
+- [ ] **Assignment and AI rules:** Point students to [exercise.md](exercise.md). They must give [AI_RULES.md](AI_RULES.md) to their AI assistant **before** they start working so the AI follows the usage limits (no full solutions, no fixing buggy scripts for them, etc.).
+- [ ] **Buggy scripts:** The four commands `bin/git-count`, `bin/git-authors`, `bin/git-summary`, and `bin/git-effort` are the buggy versions; students fix them in place. Run instructions are in [exercise.md](exercise.md) 
+
+---
+
+## 2. Commands for analysis (Step 2)
+
+The exercise asks students to analyze and debug **four** commands (see [exercise.md](exercise.md) Step 2). The table below lists those four plus **git bulk** as an optional fifth for instructor reference (git-bulk has no intentional bug). Each covers at least one of: orchestration, file iteration, env vars, error handling.
+
+| Command       | Script          | Topics covered |
+|---------------|-----------------|----------------|
+| **git count** | `bin/git-count` | Orchestration: `git shortlog`, `git rev-list --count`; simple option handling. |
+| **git summary** | `bin/git-summary` | Orchestration + **file iteration**: `git log`, `git shortlog`, `git ls-files`, `git blame`; functions like `single_file` / `lines` loop over files. |
+| **git authors** | `bin/git-authors` | Orchestration: `git shortlog -sne`; option parsing; writing output to a file. |
+| **git effort** | `bin/git-effort` | **Error handling**: `usage()`, validation of `--above`, exit codes; **iteration** over paths (`git ls-files` or arguments). |
+
+Build/CI is covered in the assignment flow (Step 1: read `.github/workflows/ci.yml`; Step 4: run `make` and `check_integrity.sh`), not as a sixth command.
+
+The **first four** scripts in the table are the buggy versions students fix in Step 2; . Bug locations and correct fixes are in section 3 below.
+
+---
+
+## 3. Bug locations and correct fixes (Step 2 — do not share with students)
+
+The four scripts **`bin/git-count`**, **`bin/git-authors`**, **`bin/git-summary`**, and **`bin/git-effort`** are the buggy versions; each has exactly one bug. **`bin/git-bulk`** has no intentional bug. Use the details below to verify student fixes and grade their explanations.
+
+---
+
+### 3.1 git-count
+
+- **Bug location:** Line 8. The script uses `git rev-list --count HEAD^` instead of `git rev-list --count HEAD`.
+- **Why it’s wrong:** `HEAD^` is the first parent of the current commit, so the count excludes the current commit. The intended behavior (matching `bin/git-count`) is to count all commits reachable from HEAD, including HEAD itself.
+- **How to see the bug:** Run the script in a repo: `./bin/git-count` or `git count`. The “total” line will be one less than the true commit count (e.g. 99 instead of 100). Running `git rev-list --count HEAD` in the same repo gives the correct number.
+- **Correct fix:** Change `HEAD^` to `HEAD` on line 8. The line must read:  
+  `echo total "$(git rev-list --count HEAD)"`
+- **How to verify:** In any repo, run the fixed script and compare “total” to `git rev-list --count HEAD`; they must match.
+- **Wrong fixes to reject:** Changing anything else (e.g. only the `--all` branch), or “fixing” by adding 1 in the echo instead of changing the ref.
+- **What a good explanation mentions:** That the script was counting the wrong ref (parent instead of HEAD), or that the total was off by one because the current commit was excluded.
+
+---
+
+### 3.2 git-authors
+
+- **Bug location:** Line 21. The test uses unquoted `$LIST`: `if [ $LIST != true ]; then`. `LIST` is never initialized at the top—it is only set to `true` when the user passes `-l` or `--list`.
+- **Why it’s wrong:** When you run without `-l` (e.g. `./bin/git-authors` or `git authors AUTHORS`), `LIST` is unset. Then `[ $LIST != true ]` becomes `[ != true ]`, which is a syntax error (unary operator expected). In Bash, variables in `[ ]` must be quoted so the test always gets the right number of arguments; when unquoted and empty/unset, the expansion yields nothing and the test is invalid.
+- **How to see the bug:** Run `./bin/git-authors` or `git authors` with no `-l` flag. The bug triggers immediately because `LIST` is unset. You get an error like `bash: [: !=: unary operator expected`.
+- **Correct fix:** Initialize `LIST=false` at the top (with the other defaults) and quote the variable in the test: change line 21 to `if [ "$LIST" != true ]; then`.
+- **How to verify:** Run without `-l` (e.g. `./bin/git-authors`); the fixed script runs and appends to AUTHORS or the given file. Run with `-l`; output goes to stdout. No syntax error in either case.
+- **Wrong fixes to reject:** Only changing the test logic without quoting or initializing `LIST`, or fixing a different line.
+- **What a good explanation mentions:** That `LIST` is only set when `-l`/`--list` is used, so it is unset on normal runs; unquoted `$LIST` in `[ ]` then becomes `[ != true ]`; the fix is to initialize `LIST=false` and quote `"$LIST"` in the test.
+
+---
+
+### 3.3 git-summary
+
+- **Bug location:** Line 13. The case matches `"x$arg"` instead of `"$arg"` — i.e. `case "x$arg" in`. So the value being matched is literally `x--line`, `x--dedup-by-email`, etc., and no pattern (`--line`, `--full-path`, `-*`, etc.) ever matches; every argument falls through to the default branch.
+- **Why it’s wrong:** All command-line options are ignored. No option (e.g. `--line`, `--dedup-by-email`, `--no-merges`, `--output-style`, `--full-path`) is ever recognized because the case value is never equal to the patterns. Non-option arguments (refs, paths) still get added back via `set -- "$@" "$arg"` in the default branch, so ref and path handling works; only option parsing is broken.
+- **How to see the bug:** Run `git summary --line` — it behaves as plain `git summary` (no line summary). Run `git summary --dedup-by-email` — dedup is not applied. Any option is ignored.
+- **Correct fix:** Change line 13 from `case "x$arg" in` to `case "$arg" in`.
+- **How to verify:** Run with options (e.g. `./bin/git-summary --line`, `./bin/git-summary --dedup-by-email`) and with a ref (e.g. `./bin/git-summary main`). Output must reflect the options and the ref.
+- **Wrong fixes to reject:** Changing anything other than the case line (e.g. only touching the `*)` branch or other parts of the script).
+- **What a good explanation mentions:** That the case was matching the wrong value (e.g. `"x$arg"` instead of `"$arg"`), so no option pattern matched and all arguments fell through to the default.
+
+---
+
+### 3.4 git-effort
+
+- **Bug location:** The `dates()` function (around lines 18–21). The body that runs `git log` was **deleted** and replaced with a single line: `echo "You still haven't solved all the bugs eh?"`. So `dates()` no longer returns commit dates for the given path; it always returns that message.
+- **Why it’s wrong:** `dates()` is supposed to run `git log` with the repo's log options and the path argument to get one date per line. Without that line, `commit_dates` is never real date output, so commit counts and active days are wrong and the script prints the taunt message (or nonsense) instead of effort stats.
+- **How to see the bug:** Run `./bin/git-effort` or `git effort` or `git effort Makefile`. The script will print "You still haven't solved all the bugs eh?" (or wrong/garbage stats) instead of the normal effort table.
+- **Correct fix:** Restore the deleted line inside `dates()` so the function runs Git and outputs dates. The body of `dates()` must be:
+  `eval "git log $args_to_git_log --pretty='format: %ad' --date=short -- \"$1\""`
+  (and remove the `echo "You still haven't solved all the bugs eh?"` line).
+- **How to verify:** Run the fixed script in a repo (e.g. `git effort` or `git effort Makefile`). Output must be the normal effort table (path, commits, active days), not the taunt message.
+- **Wrong fixes to reject:** Changing other parts of the script (e.g. only fixing `effort()` or path handling) without restoring the `git log` invocation inside `dates()`.
+- **What a good explanation mentions:** That the `dates()` function was missing the line that runs `git log` to get commit dates for the path; the fix is to put that line back so `dates()` returns real date lines instead of the placeholder message.
+
+---
+
+## 4. Single problem (Step 3) — grading checklist
+
+All students implement **`git recent-committers`** with the same requirements (full problem is in [exercise.md](exercise.md) Step 3). Accept different approaches (e.g. different option names, or different ways to specify the time window) as long as:
+
+- [ ] Command is `git recent-committers` and lives in `bin/git-recent-committers`.
+- [ ] At least one environment variable controls behavior (e.g. default number of days) and is documented.
+- [ ] At least one explicit error check (repo or option validation) with stderr message and non-zero exit.
+- [ ] Script contains a loop that iterates over multiple items (e.g. shortlog or log lines for the time window).
+- [ ] `./check_integrity.sh recent-committers` passes (script, man, Commands.md, completion).
+
+---
+
+## 5. Rubric (suggested)
+
+| Category | What to check |
+|----------|----------------|
+| **Implementation** | `bin/git-recent-committers` exists, executable, shebang correct; env var used; at least one error check; at least one loop; behavior matches problem (committers in time window + commit count). |
+| **Integration** | Man page present and built; Commands.md updated; completion updated; `./check_integrity.sh recent-committers` passes. |
+| **Documentation** | Usage and examples clear; explanation (what it does, how to run, changes, orchestration, env var, errors, iteration) complete. |
+| **Step 2 (analysis)** | All four commands analyzed; at least one iteration example identified and explained. |
+| **Step 2 (debugging)** | All four buggy scripts (git-count, git-authors, git-summary, git-effort) fixed correctly; each fix explained in 2–3 sentences. |
+| **Reflection (optional)** | If provided, one example per learning goal used. |
+
+---
+
+## 6. Optional elements
+
+Students may optionally:
+
+- Read the install script and explain `PREFIX`.
+- Describe or add a CI step that runs `check_integrity.sh` for their command.
+- Write a small script to clean only built man pages for their command.
+- Use `set -e` or explicit per-command checks and explain in the documentation.
+
+These can be noted in grading but are not required for full marks.

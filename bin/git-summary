@@ -9,7 +9,7 @@ DEDUP_BY_EMAIL=
 MERGES_ARG=
 OUTPUT_STYLE=
 for arg in "$@"; do
-    case "$arg" in
+    case "x$arg" in
         --full-path)
             PROJECT_FULL_PATH=1
             ;;
@@ -31,7 +31,6 @@ for arg in "$@"; do
             exit 1
             ;;
         *)
-            # set the argument back
             set -- "$@" "$arg"
             ;;
     esac

@@ -12,10 +12,12 @@ git-alias(1) -- Define, search and show aliases
 `git-alias` [--local] &lt;search-pattern&gt; <br>
 `git-alias` [--global] &lt;alias-name&gt; &lt;command&gt; <br>
 `git-alias` [--local] &lt;alias-name&gt; &lt;command&gt; <br>
+`git-alias` [--global|--local] --remove &lt;alias-name&gt; <br>
+`git-alias` [--global|--local] --remove-all <br>
 
 ## DESCRIPTION
 
-  List all aliases, show one alias, or set one (global or local) alias.
+  List all aliases, show one alias, set one (global or local) alias, remove one alias by name, or remove all aliases in the current scope.
 
 ## OPTIONS
 
@@ -26,6 +28,14 @@ git-alias(1) -- Define, search and show aliases
   --local
 
   Show or create alias in the repository config
+
+  --remove, -r
+
+  Remove one alias by name. Respects --global and --local. Exits with an error to stderr if the alias does not exist.
+
+  --remove-all, --clear
+
+  Remove every alias in the current scope. Respects --global and --local. Iterates over existing aliases and unsets each one.
 
   &lt;search-pattern&gt;
 
