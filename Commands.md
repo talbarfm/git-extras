@@ -696,7 +696,6 @@ Set Jack as the only committer of the whole repository (keeps authors)
 $ git reauthor --all --correct-email jack@perso.me --correct-name Jack --type committer
 ```
 
-
 ## git alias
 
 Define, search and show aliases.
