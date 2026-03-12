@@ -50,7 +50,6 @@
  - [`git psykorebase`](#git-psykorebase)
  - [`git pull-request`](#git-pull-request)
  - [`git reauthor`](#git-reauthor)
- - [`git recent-committers`](#git-recent-committers)
  - [`git rebase-patch`](#git-rebase-patch)
  - [`git release`](#git-release)
  - [`git rename-branch`](#git-rename-branch)
@@ -695,38 +694,6 @@ $ git reauthor --all --correct-email jack@perso.me --correct-name Jack
 Set Jack as the only committer of the whole repository (keeps authors)
 ```bash
 $ git reauthor --all --correct-email jack@perso.me --correct-name Jack --type committer
-```
-
-## git recent-committers
-
-List committers with at least one commit in the last N days (one line per committer with commit count, e.g. `5  Alice`, `2  Bob`).
-
-**Options:**
-
-- `-n <days>` — Use the last `<days>` days. Overrides the default from `GIT_RECENT_COMMITTERS_DAYS`.
-
-**Environment:**
-
-- `GIT_RECENT_COMMITTERS_DAYS` — Default number of days to look back when `-n` is not given. Defaults to 7 if unset.
-
-List committers in the last 7 days (default):
-
-```bash
-$ git recent-committers
-5  Alice
-2  Bob
-```
-
-List committers in the last 14 days:
-
-```bash
-$ git recent-committers -n 14
-```
-
-Use a custom default of 30 days:
-
-```bash
-$ GIT_RECENT_COMMITTERS_DAYS=30 git recent-committers
 ```
 
 ## git alias
