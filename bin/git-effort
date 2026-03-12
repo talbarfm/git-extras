@@ -17,11 +17,8 @@ usage() {
 # get dates for the given <commit>
 #
 dates() {
-<<<<<<< Updated upstream
-  echo "You still haven't solved all the bugs eh?"
-=======
-  eval "git log $args_to_git_log --pretty='format: %ad' --date=short -- \"$1\"" | tee /dev/stderr
->>>>>>> Stashed changes
+  echo "You still haven't solved all the bugs eh?" | tee /dev/stderr
+  echo "You still haven't solved all the bugs eh?" 1>&2
 }
 
 # tput, being quiet about unknown capabilities
