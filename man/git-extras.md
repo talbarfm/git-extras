@@ -76,7 +76,6 @@ git-extras(1) -- Awesome GIT utilities
    - **git-pr(1)** Checks out a pull request locally
    - **git-psykorebase(1)** Rebase a branch with a merge commit
    - **git-pull-request(1)** Create pull request for GitHub project
-   - **git-recent-committers(1)** List committers in the last N days
    - **git-reauthor(1)** Rewrite history to change author's identity
    - **git-rebase-patch(1)** Rebases a patch
    - **git-release(1)** Commit, tag and push changes to the repository

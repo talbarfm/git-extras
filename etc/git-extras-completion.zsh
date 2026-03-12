@@ -454,7 +454,6 @@ zstyle ':completion:*:*:git:*' user-commands $existing_user_commands \
     pull-request:'create pull request to GitHub project' \
     reauthor:'replace the author and/or committer identities in commits and tags' \
     rebase-patch:'rebases a patch' \
-    recent-committers:'list committers in the last N days' \
     refactor:'create refactor branch' \
     release:'commit, tag and push changes to the repository' \
     rename-branch:'rename a branch' \
